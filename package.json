@@ -11,9 +11,13 @@
     "url": "https://github.com/cirocosta/yaspm.git"
   },
   "author": "Ciro S. Costa <ciro9758@gmail.com> (http://www.cirocosta.com.br/)",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/cirocosta/yaspm/issues"
   },
-  "homepage": "https://github.com/cirocosta/yaspm"
+  "homepage": "https://github.com/cirocosta/yaspm",
+  "dependencies": {
+    "serialport": "^1.4.0",
+    "split": "^0.3.0"
+  }
 }

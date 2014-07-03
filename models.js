@@ -2,10 +2,6 @@ var serialPort = require('serialport')
   , split = require('split')
   , spm = require('./spm');
 
-if (!$q)
-  var $q = require('q');
-
-
 function Device (device, sp) {
   this.info = device;
   this.sp = sp;
