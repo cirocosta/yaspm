@@ -1,21 +1,19 @@
 #!/usr/bin/env node
 
-var models = require('models')
-	,	machines = new models.Machines();
+var yaspm = require('./main')
+	,	machines = new yaspm.Machines();
 
 machines.search(function (err, device) {
 	if (err) throw err;
 
 	device.connect(function () {
-		device.registerToData(function (err, d) {
-			if (!err) {
-				console.log(d);
-			}
+		device.registerToData(function (e, d) {
+			e || console.log(d);
 		});
 
 		setInterval(function () {
-			device.write('?\n', function (err) {
-				if (err) throw err;
+			device.write('?\n', function (e) {
+				if (e) throw e;
 			});
 		}, 300);
 	});

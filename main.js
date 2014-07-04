@@ -9,11 +9,11 @@ function Device (device, sp) {
 }
 
 Device.prototype.connect = function(ocb, ccb) {
-  var scope = this;
-  var sp = new serialPort.SerialPort(this.info.comName);
+  var scope = this
+    , sp = new serialPort.SerialPort(this.info.comName);
+
   sp.on('open', function () {
     scope.open = true;
-
     ocb();
   });
 
