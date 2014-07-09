@@ -37,7 +37,7 @@ Heavily inspired by [serialport-manager](https://github.com/tmpvar/serialport-ma
  */
 ```
 
-### Device()
+### Device(device, sp)
 ```
 /**
  * Represents a valid Device.
