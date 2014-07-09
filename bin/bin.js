@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var yaspm = require('./main')
+var yaspm = require('../src/main')
 	,	machines = new yaspm.Machines();
 
 machines.search(function (err, device) {

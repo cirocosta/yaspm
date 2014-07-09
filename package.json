@@ -2,7 +2,7 @@
   "name": "yaspm",
   "version": "0.0.0",
   "description": "yet another serialport manager",
-  "main": "main.js",
+  "main": "./src/main.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/cirocosta/yaspm.git"
