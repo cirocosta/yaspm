@@ -38,11 +38,13 @@ Heavily inspired by [serialport-manager](https://github.com/tmpvar/serialport-ma
 ```
 
 ### Device()
+```
 /**
  * Represents a valid Device.
  * @param {obj} device the info about the device
  * @param {obj} sp     serialport object
  */
+```
 
 #### connect(ocb, ccb)
 ```
