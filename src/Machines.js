@@ -3,14 +3,22 @@
 var Device = require('./Device');
 var serialport = require('serialport');
 var spm = require('./spm');
+var EventEmitter = require('events').EventEmitter;
 
 /**
  * Describes the conjunction of machines to
  * search for.
  */
 function Machines (sigTerm) {
+  if (!(this instance of Machines))
+    return new Machines(sigTerm);
+
+  EventEmitter.call(this);
+
   this.sigTerm = sigTerm || 'grbl';
 }
+
+util.inherits(Machines, EventEmitter);
 
 /**
  * Searches for valid devices that are connected
@@ -18,25 +26,30 @@ function Machines (sigTerm) {
  * callback function to be resolved with
  * (err|Device) when a valid device is found
  */
-Machines.prototype.search = function (onDeviceFound) {
+Machines.prototype.search = function () {
   var scope = this;
 
   serialport.list(function (err, ports) {
     ports.forEach(function (port) {
-      var device = {
+      var dev = {
         info: port
       };
 
       spm(port.comName, function (e, sp, sig) {
-        device.info.signature = sig;
+        dev.info.signature = sig;
 
+        var device = new Device(dev.info, sp);
+
+        scope.emit('device', device);
         if (scope.isValidDevice(device))
-          onDeviceFound(null, new Device(device.info, sp));
+          scope.emit('validdevice', device);
         else
-          onDeviceFound(new Error('Not a valid device'));
+          scope.emit('invaliddevice', device);
       });
     });
   });
+
+  return this;
 };
 
 /**

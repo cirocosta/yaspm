@@ -42,7 +42,7 @@ Device.prototype.connect = function(ocb, ccb) {
     ccb();
   }.bind(this));
 
-  this._sp = sp;
+  return (this._sp = sp, this);
 };
 
 /**
