@@ -1,3 +1,7 @@
+'use strict';
+
+var SerialPort = require('serialport').SerialPort;
+
 /**
  * Main function to be exported. It exposes a
  * better serialport.
@@ -9,10 +13,7 @@
  *                            (err|sp|signature)
  */
 function enhanceSpm (comName, fn) {
-  'use strict';
-
-  var SerialPort = require('serialport').SerialPort
-    , sp = new SerialPort(comName)
+  var sp = new SerialPort(comName)
     , open = false;
 
   sp.writable = true;
@@ -49,7 +50,7 @@ function getSignature (sp, fn) {
 
     clearTimeout(timer);
 
-    if (start === null && data) {
+    if (!start && data) {
       start = Date.now();
     } else if (Date.now() - start > 100) {
       sp.removeListener('data', handleSignature);
@@ -61,5 +62,6 @@ function getSignature (sp, fn) {
 
   sp.on('data', handleSignature);
 }
+
 
 module.exports = enhanceSpm;

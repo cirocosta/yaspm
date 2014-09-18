@@ -1,13 +1,13 @@
 {
   "name": "yaspm",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "yet another serialport manager",
-  "main": "./src/main.js",
+  "main": "./index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/cirocosta/yaspm.git"
   },
-  "author": "Ciro S. Costa <ciro9758@gmail.com> (http://www.cirocosta.com.br/)",
+  "author": "Ciro S. Costa <ciro9758@gmail.com> (http://cirocosta.github.io/)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/cirocosta/yaspm/issues"

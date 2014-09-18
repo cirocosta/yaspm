@@ -8,25 +8,33 @@ Heavily inspired by [serialport-manager](https://github.com/tmpvar/serialport-ma
 
 ## Usage
 
-### Machines(sigTerm)
-```
+### Machines([,sigTerm='grbl'])
+```javascript
 /**
  * Describes the conjunction of machines to
  * search for.
  */
+
+var machines = new yaspm.Machines();
 ```
 
-#### search(onValidDeviceFound)
-```
+#### ::search(onDeviceFound)
+```javascript
 /**
  * Searches for valid devices that are connected
- * @param  {Function} onValidDeviceFound
+ * @param  {Function} onDeviceFound
  * callback function to be resolved with
  * (err|Device) when a valid device is found
  */
+
+machines.search(function (err, device) {
+	if (err) throw err;
+
+	console.log(device.getInfo());
+});
 ```
 
-#### isValidDevice(device)
+#### ::isValidDevice(device)
 
 ```
 /**
@@ -46,7 +54,7 @@ Heavily inspired by [serialport-manager](https://github.com/tmpvar/serialport-ma
  */
 ```
 
-#### connect(ocb, ccb)
+#### ::connect(ocb, ccb)
 ```
 /**
  * Tries to connect to the device.
@@ -57,7 +65,7 @@ Heavily inspired by [serialport-manager](https://github.com/tmpvar/serialport-ma
  */
 ```
 
-#### registerToData(cb)
+#### ::registerToData(cb)
 ```
 /**
  * Sets a listener for the 'data' event of the
@@ -69,7 +77,7 @@ Heavily inspired by [serialport-manager](https://github.com/tmpvar/serialport-ma
  */
 ```
 
-#### write(what, cb)
+#### ::write(what, cb)
 ```
 /**
  * Writes to the device (which must be
