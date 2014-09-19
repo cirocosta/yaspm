@@ -1,47 +1,44 @@
 'use strict';
 
-function grbl (dev) {
-  var RX_BUFFER_SIZE = 128;
-  var queue = [];
-  var gCount = 0;
-
-  function _sum (lines) {
-    return lines.reduce(function (sum, curr) {
-      return sum + curr;
-    }, 0);
-  }
-
-  function _send () {
-    if (!queue.length)
-      return;
-
-    while (queue[0].length + gCount < RX_BUFFER_SIZE) {
-      var line = queue.shift();
-
-      gCount += line.length;
-      dev.write();
-    }
-  }
-
-  dev.on('data', function (data) {
-    if (data === 'ok')
-      send();
-  });
-
-  function write (line) {
-    queue.push(line.trim());
-  }
-
-  function flush () {
-    _send();
-
-    return queue;
-  }
-
-  return {
-    write: write,
-    flush: flush
-  };
+function Grbl (dev, RX_BUFFER_SIZE) {
+  this.dev = dev;
+  this.RX_BUFFER_SIZE = RX_BUFFER_SIZE || 128;
+  this.queue = [];
+  this.gCount = 0;
 }
 
-module.exports = grbl;
+Grbl.prototype.process = function (line) {
+  if (line)
+    this._enqueue(line);
+
+  if (!this.queue.length)
+    return;
+
+  // while we have the possibility of sending data
+  while (this.queue.length &&
+         this.queue[0].length + this.gCount < this.RX_BUFFER_SIZE) {
+
+    var line = this.queue.shift();
+
+    this.dev.write(line, function (err) {
+      if (!err)
+        this.gCount += line.length;
+    }.bind(this));
+  }
+};
+
+Grbl.prototype._enqueue = function (line) {
+  if (line.length >= this.RX_BUFFER_SIZE)
+    throw new Error('Line\'s length must be less than RX_BUFFER_SIZE');
+
+  this.queue.push(line.trim());
+};
+
+Grbl.prototype.init = function () {
+  this.dev.on('data', function (data) {
+    if (data === 'ok')
+      this.process();
+  }.bind(this));
+};
+
+module.exports = Grbl;
