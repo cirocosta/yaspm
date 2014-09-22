@@ -1,16 +1,25 @@
 'use strict';
 
-var Device = require('./Device');
-var serialport = require('serialport');
-var inherits = require('util').inherits;
-var diff = require('./flat-diff');
-var spm = require('./spm');
-var _ = require('lodash');
-var EventEmitter = require('events').EventEmitter;
+var Device = require('./Device')
+  , serialport = require('serialport')
+  , inherits = require('util').inherits
+  , diff = require('./flat-diff')
+  , spm = require('./spm')
+  , _ = require('lodash')
+  , EventEmitter = require('events').EventEmitter;
 
 /**
  * Describes the conjunction of machines to
  * search for.
+ *
+ * emits:
+ *  - removeddevice,
+ *  - device,
+ *  - invaliddevice,
+ *  - validdevice.
+ *
+ * @param {string} sigTerm signature string to
+ * match.
  */
 function Machines (sigTerm) {
   if (!(this instanceof Machines))
@@ -30,8 +39,9 @@ inherits(Machines, EventEmitter);
  * callback function to be resolved with
  * (err|Device) when a valid device is found
  */
-Machines.prototype.search = function () {
+Machines.prototype.search = function (time) {
   var scope = this;
+  time = time || 500;
 
   setTimeout(function () {
     serialport.list(function (err, ports) {
@@ -54,11 +64,15 @@ Machines.prototype.search = function () {
     });
 
     scope.search();
-  }, 500);
+  }, time);
 
   return this;
 };
 
+/**
+ * Processes the sigTerm
+ * @param  {Device} dev
+ */
 Machines.prototype._process = function (dev) {
   var scope = this;
 

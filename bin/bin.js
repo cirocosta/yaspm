@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
-var Machines = require('../index').Machines();
+var yaspm = require('../index');
+var Grbl = yaspm.Grbl;
+var Machines = yaspm.Machines();
+
 
 Machines
   .search()
@@ -8,7 +11,6 @@ Machines
     device
       .connect()
       .on('connect', handleConnect.bind(null, device))
-      .on('data', handleData.bind(null, device))
       .on('disconnect', handleDisconnect.bind(null, device));
   })
   .on('removeddevice', function (pnpId) {
@@ -20,15 +22,29 @@ var tmr;
 
 function handleConnect (device) {
   console.log('device connected!');
-  console.log(device.getInfo());
+
+  var grbl = new Grbl(device);
+  grbl.init();
+
+  grbl.on('status', function (status) {
+    console.log(status);
+  });
+
+  grbl.on('error', function (err) {
+    console.log(err);
+  });
+
+  grbl.on('ok', function () {
+    console.log('ok');
+  });
+
+  setTimeout(function () {
+    grbl.process('G1 X10 Y10\n');
+  }, 300);
 
   tmr = setInterval(function () {
-    device.write('?\n');
-  }, 1000);
-}
-
-function handleData (device, data) {
-  console.log(data);
+    grbl.process('?\n');
+  }, 300);
 }
 
 function handleDisconnect (device) {

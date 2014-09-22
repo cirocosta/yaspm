@@ -1,8 +1,8 @@
 'use strict';
 
 var assert = require('assert');
-var Grbl = require('../src/grbl');
-var FakeDevice = require('../src/fake-device');
+var Grbl = require('../src/Grbl');
+var FakeDevice = require('../src/FakeDevice');
 
 
 describe('grbl', function () {

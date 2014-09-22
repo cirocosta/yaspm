@@ -1,14 +1,20 @@
 'use strict';
 
-var split = require('split');
-var serialport = require('serialport');
-var _ = require('lodash');
-var EventEmitter = require('events').EventEmitter;
-var inherits = require('util').inherits;
+var split = require('split')
+  , serialport = require('serialport')
+  , _ = require('lodash')
+  , EventEmitter = require('events').EventEmitter
+  , inherits = require('util').inherits;
 
 
 /**
  * Represents a valid Device.
+ *
+ * emits:
+ *  - connect
+ *  - disconnect
+ *  - error
+ *
  * @param {obj} device the info about the device
  * @param {obj} sp     serialport object
  */
@@ -18,6 +24,8 @@ function Device (device, sp) {
 
   this._open = false;
   this._sp = sp;
+
+  EventEmitter.call(this);
 }
 
 inherits(Device, EventEmitter);
@@ -37,6 +45,7 @@ Device.prototype.getInfo = function () {
  */
 Device.prototype.connect = function () {
   var sp = new serialport.SerialPort(this.comName);
+
   var scope = this;
 
   sp.on('open', function () {
@@ -52,8 +61,6 @@ Device.prototype.connect = function () {
     .on('data', scope.emit.bind(this, 'data'));
 
   sp.on('close', function () {
-    console.log('close');
-
     scope._open = false;
     scope.emit('disconnect');
   });
@@ -76,11 +83,8 @@ Device.prototype.connect = function () {
  *                         operation
  */
 Device.prototype.write = function(what, cb) {
-  if (!this._open) {
-    cb(new Error('The Device must be connected'));
-
-    return;
-  }
+  if (!this._open)
+    return cb(new Error('The Device must be connected'));
 
   this._sp.write(what, cb);
 };
