@@ -4,11 +4,20 @@
 npm install --save yaspm
 ```
 
-Heavily inspired by [serialport-manager](https://github.com/tmpvar/serialport-manager), does a little part of it being portable to node-webkit.
+Heavily inspired by [serialport-manager](https://github.com/tmpvar/serialport-manager) and [node-grbl](https://github.com/tmpvar/node-grbl), does a little part of it being portable to node-webkit.
 
 ## Usage
 
 ### Machines([,sigTerm='grbl'])
+
+Machines are the wrapper around device discover and also validatin of those (by checking the signature emitted by them). It emits 4 events:
+
+1. device
+2. validdevice
+3. invaliddevice
+4. removeddevice
+
+
 ```javascript
 /**
  * Describes the conjunction of machines to
@@ -46,6 +55,16 @@ machines.search(function (err, device) {
 ```
 
 ### Device(device, sp)
+
+Wrapper around a single device.
+
+Emits four events:
+
+1. connect
+2. disconnect
+3. data
+4. error
+
 ```
 /**
  * Represents a valid Device.

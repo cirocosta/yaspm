@@ -14,7 +14,11 @@
   },
   "homepage": "https://github.com/cirocosta/yaspm",
   "dependencies": {
+    "lodash": "^2.4.1",
     "serialport": "^1.4.0",
     "split": "^0.3.0"
+  },
+  "devDependencies": {
+    "mocha": "^1.21.4"
   }
 }

@@ -1,16 +1,37 @@
 'use strict';
 
-var Device = require('./Device');
-var serialport = require('serialport');
-var spm = require('./spm');
+var Device = require('./Device')
+  , serialport = require('serialport')
+  , inherits = require('util').inherits
+  , diff = require('./flat-diff')
+  , spm = require('./spm')
+  , _ = require('lodash')
+  , EventEmitter = require('events').EventEmitter;
 
 /**
  * Describes the conjunction of machines to
  * search for.
+ *
+ * emits:
+ *  - removeddevice,
+ *  - device,
+ *  - invaliddevice,
+ *  - validdevice.
+ *
+ * @param {string} sigTerm signature string to
+ * match.
  */
 function Machines (sigTerm) {
+  if (!(this instanceof Machines))
+    return new Machines(sigTerm);
+
+  EventEmitter.call(this);
+
   this.sigTerm = sigTerm || 'grbl';
+  this._devices = {};
 }
+
+inherits(Machines, EventEmitter);
 
 /**
  * Searches for valid devices that are connected
@@ -18,24 +39,55 @@ function Machines (sigTerm) {
  * callback function to be resolved with
  * (err|Device) when a valid device is found
  */
-Machines.prototype.search = function (onDeviceFound) {
+Machines.prototype.search = function (time) {
   var scope = this;
+  time = time || 500;
 
-  serialport.list(function (err, ports) {
-    ports.forEach(function (port) {
-      var device = {
-        info: port
-      };
+  setTimeout(function () {
+    serialport.list(function (err, ports) {
+      var diffs = diff(_.pluck(scope._devices, 'pnpId'),
+                       _.pluck(ports, 'pnpId'));
 
-      spm(port.comName, function (e, sp, sig) {
-        device.info.signature = sig;
+      diffs.insertions.forEach(function (pnpId) {
+        var dev = _.find(ports, function (elem) {
+          return elem.pnpId === pnpId;
+        });
 
-        if (scope.isValidDevice(device))
-          onDeviceFound(null, new Device(device.info, sp));
-        else
-          onDeviceFound(new Error('Not a valid device'));
+        scope._process(dev);
+      });
+
+      diffs.deletions.forEach(function (pnpId) {
+        delete scope._devices[pnpId];
+
+        scope.emit('removeddevice', pnpId);
       });
     });
+
+    scope.search();
+  }, time);
+
+  return this;
+};
+
+/**
+ * Processes the sigTerm
+ * @param  {Device} dev
+ */
+Machines.prototype._process = function (dev) {
+  var scope = this;
+
+  spm(dev.comName, function (e, sp, sig) {
+    dev.signature = sig;
+
+    var device = new Device(dev, sp);
+
+    scope._devices[dev.pnpId] = device;
+
+    scope.emit('device', device);
+    if (scope.isValidDevice(device))
+      scope.emit('validdevice', device);
+    else
+      scope.emit('invaliddevice', device);
   });
 };
 
@@ -46,8 +98,10 @@ Machines.prototype.search = function (onDeviceFound) {
  * @return {bool}
  */
 Machines.prototype.isValidDevice = function (device) {
-  if (!device.info ||
-      !~device.info.signature.toLowerCase().indexOf(this.sigTerm))
+  var info = device.getInfo();
+
+  if (!info ||
+      !~info.signature.toLowerCase().indexOf(this.sigTerm))
     return false;
 
   return true;
