@@ -3,6 +3,9 @@
 var split = require('split');
 var serialport = require('serialport');
 var _ = require('lodash');
+var EventEmitter = require('events').EventEmitter;
+var inherits = require('util').inherits;
+
 
 /**
  * Represents a valid Device.
@@ -17,63 +20,51 @@ function Device (device, sp) {
   this._sp = sp;
 }
 
+inherits(Device, EventEmitter);
+
 /**
  * Returns information about the device.
  * @return {Object}
  */
 Device.prototype.getInfo = function () {
   return _.pick(this, function (key) {
-    if (key != null)
-      return key[0] != '_';
-    return false;
+    return key != null ? key[0] != '_' : false;
   });
 };
 
 /**
  * Tries to connect to the device.
- * @param  {Function} ocb callback function for
- *                        the open event
- * @param  {Function} ccb callback function for
- *                        the close event
  */
-Device.prototype.connect = function(ocb, ccb) {
+Device.prototype.connect = function () {
   var sp = new serialport.SerialPort(this.comName);
+  var scope = this;
 
   sp.on('open', function () {
-    this._open = true;
-    ocb();
-  }.bind(this));
+    scope._open = true;
+
+    process.nextTick(function () {
+      scope.emit('connect');
+    });
+  });
+
+  sp
+    .pipe(split())
+    .on('data', scope.emit.bind(this, 'data'));
 
   sp.on('close', function () {
-    this._open = false;
-    ccb();
-  }.bind(this));
+    console.log('close');
 
-  // sp.on('error', function () {
-  //   this.emit('error');
-  // }.bind(this));
-
-  return (this._sp = sp, this);
-};
-
-/**
- * Sets a listener for the 'data' event of the
- * device.
- * @param  {Function} cb callback function to be
- *                       called with (err|data)
- *                       whenever data|err
- *                       comes.
- */
-Device.prototype.registerToData = function(cb) {
-  if (!this._open) {
-    cb(new Error('The device must be connected'));
-
-    return;
-  }
-
-  this._sp.pipe(split()).on('data', function (data) {
-    cb(null, data);
+    scope._open = false;
+    scope.emit('disconnect');
   });
+
+  sp.on('error', function () {
+    scope.emit('error');
+  });
+
+  sp.on('error', scope.emit.bind(this, 'error'));
+
+  return (scope._sp = sp, this);
 };
 
 /**

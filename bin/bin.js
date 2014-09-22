@@ -5,26 +5,35 @@ var Machines = require('../index').Machines();
 Machines
   .search()
   .on('validdevice', function (device) {
-    console.log('device found: ' + device.pnpId);
+    device
+      .connect()
+      .on('connect', handleConnect.bind(null, device))
+      .on('data', handleData.bind(null, device))
+      .on('disconnect', handleDisconnect.bind(null, device));
   })
   .on('removeddevice', function (pnpId) {
-    console.log('Just remoded: ' + pnpId);
+    console.log('Just removed: ' + pnpId);
   });
 
 
-// Machines()
-//   .search()
-//   .on('validdevice', function (device) {
+var tmr;
 
-//     device
-//       .connect()
-//       .on('connected', function () {
+function handleConnect (device) {
+  console.log('device connected!');
+  console.log(device.getInfo());
 
-//       });
-//       .on('data', function (data) {
-//         console.log(data);
-//       })
-//       .on('disconnect', function () {
+  tmr = setInterval(function () {
+    device.write('?\n');
+  }, 1000);
+}
 
-//       });
-//   });
+function handleData (device, data) {
+  console.log(data);
+}
+
+function handleDisconnect (device) {
+  console.log('device disconnected :(');
+  console.log(device.getInfo());
+
+  clearInterval(tmr);
+}
