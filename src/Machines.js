@@ -2,7 +2,10 @@
 
 var Device = require('./Device');
 var serialport = require('serialport');
+var inherits = require('util').inherits;
+var diff = require('./flat-diff');
 var spm = require('./spm');
+var _ = require('lodash');
 var EventEmitter = require('events').EventEmitter;
 
 /**
@@ -10,15 +13,16 @@ var EventEmitter = require('events').EventEmitter;
  * search for.
  */
 function Machines (sigTerm) {
-  if (!(this instance of Machines))
+  if (!(this instanceof Machines))
     return new Machines(sigTerm);
 
   EventEmitter.call(this);
 
   this.sigTerm = sigTerm || 'grbl';
+  this._devices = {};
 }
 
-util.inherits(Machines, EventEmitter);
+inherits(Machines, EventEmitter);
 
 /**
  * Searches for valid devices that are connected
@@ -29,27 +33,48 @@ util.inherits(Machines, EventEmitter);
 Machines.prototype.search = function () {
   var scope = this;
 
-  serialport.list(function (err, ports) {
-    ports.forEach(function (port) {
-      var dev = {
-        info: port
-      };
+  setTimeout(function () {
+    serialport.list(function (err, ports) {
+      var diffs = diff(_.pluck(scope._devices, 'pnpId'),
+                       _.pluck(ports, 'pnpId'));
 
-      spm(port.comName, function (e, sp, sig) {
-        dev.info.signature = sig;
+      diffs.insertions.forEach(function (pnpId) {
+        var dev = _.find(ports, function (elem) {
+          return elem.pnpId === pnpId;
+        });
 
-        var device = new Device(dev.info, sp);
+        scope._process(dev);
+      });
 
-        scope.emit('device', device);
-        if (scope.isValidDevice(device))
-          scope.emit('validdevice', device);
-        else
-          scope.emit('invaliddevice', device);
+      diffs.deletions.forEach(function (pnpId) {
+        delete scope._devices[pnpId];
+
+        scope.emit('removeddevice', pnpId);
       });
     });
-  });
+
+    scope.search();
+  }, 500);
 
   return this;
+};
+
+Machines.prototype._process = function (dev) {
+  var scope = this;
+
+  spm(dev.comName, function (e, sp, sig) {
+    dev.signature = sig;
+
+    var device = new Device(dev, sp);
+
+    scope._devices[dev.pnpId] = device;
+
+    scope.emit('device', device);
+    if (scope.isValidDevice(device))
+      scope.emit('validdevice', device);
+    else
+      scope.emit('invaliddevice', device);
+  });
 };
 
 /**
@@ -59,8 +84,10 @@ Machines.prototype.search = function () {
  * @return {bool}
  */
 Machines.prototype.isValidDevice = function (device) {
-  if (!device.info ||
-      !~device.info.signature.toLowerCase().indexOf(this.sigTerm))
+  var info = device.getInfo();
+
+  if (!info ||
+      !~info.signature.toLowerCase().indexOf(this.sigTerm))
     return false;
 
   return true;

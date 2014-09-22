@@ -2,6 +2,7 @@
 
 var split = require('split');
 var serialport = require('serialport');
+var _ = require('lodash');
 
 /**
  * Represents a valid Device.
@@ -9,7 +10,9 @@ var serialport = require('serialport');
  * @param {obj} sp     serialport object
  */
 function Device (device, sp) {
-  this._info = device;
+  for (var i in device)
+    this[i] = device[i];
+
   this._open = false;
   this._sp = sp;
 }
@@ -19,7 +22,11 @@ function Device (device, sp) {
  * @return {Object}
  */
 Device.prototype.getInfo = function () {
-  return this._info;
+  return _.pick(this, function (key) {
+    if (key != null)
+      return key[0] != '_';
+    return false;
+  });
 };
 
 /**
@@ -30,7 +37,7 @@ Device.prototype.getInfo = function () {
  *                        the close event
  */
 Device.prototype.connect = function(ocb, ccb) {
-  var sp = new serialport.SerialPort(this._info.comName);
+  var sp = new serialport.SerialPort(this.comName);
 
   sp.on('open', function () {
     this._open = true;
@@ -41,6 +48,10 @@ Device.prototype.connect = function(ocb, ccb) {
     this._open = false;
     ccb();
   }.bind(this));
+
+  // sp.on('error', function () {
+  //   this.emit('error');
+  // }.bind(this));
 
   return (this._sp = sp, this);
 };
