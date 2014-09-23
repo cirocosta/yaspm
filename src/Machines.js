@@ -25,10 +25,10 @@ function Machines (sigTerm) {
   if (!(this instanceof Machines))
     return new Machines(sigTerm);
 
-  EventEmitter.call(this);
-
-  this.sigTerm = sigTerm || 'grbl';
+  this._sigTerm = sigTerm;
   this._devices = {};
+
+  EventEmitter.call(this);
 }
 
 inherits(Machines, EventEmitter);
@@ -53,7 +53,7 @@ Machines.prototype.search = function (time) {
           return elem.pnpId === pnpId;
         });
 
-        scope._process(dev);
+        scope._process(dev, !!scope._sigTerm);
       });
 
       diffs.deletions.forEach(function (pnpId) {
@@ -73,17 +73,21 @@ Machines.prototype.search = function (time) {
  * Processes the sigTerm
  * @param  {Device} dev
  */
-Machines.prototype._process = function (dev) {
+Machines.prototype._process = function (dev, checkSignature) {
   var scope = this;
 
-  spm(dev.comName, function (e, sp, sig) {
-    dev.signature = sig;
+  spm(dev.comName, checkSignature, function (e, sp, sig) {
+    var device;
 
-    var device = new Device(dev, sp);
+    dev.signature = sig;
+    device = new Device(dev, sp);
 
     scope._devices[dev.pnpId] = device;
-
     scope.emit('device', device);
+
+    if (!sig)
+      return;
+
     if (scope.isValidDevice(device))
       scope.emit('validdevice', device);
     else
@@ -100,11 +104,9 @@ Machines.prototype._process = function (dev) {
 Machines.prototype.isValidDevice = function (device) {
   var info = device.getInfo();
 
-  if (!info ||
-      !~info.signature.toLowerCase().indexOf(this.sigTerm))
-    return false;
-
-  return true;
+  return (!(info && ~info.signature.toLowerCase().indexOf(this._sigTerm)))
+      ? false
+      : true;
 };
 
 

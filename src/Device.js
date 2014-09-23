@@ -19,6 +19,9 @@ var split = require('split')
  * @param {obj} sp     serialport object
  */
 function Device (device, sp) {
+  if (!(device && sp))
+    throw new Error('a Device and a SerialPort must be passed');
+
   for (var i in device)
     this[i] = device[i];
 
@@ -40,12 +43,19 @@ Device.prototype.getInfo = function () {
   });
 };
 
+Device.prototype.setSignature = function (sig) {
+  this.signature = sig;
+
+  return this;
+};
+
 /**
  * Tries to connect to the device.
  */
-Device.prototype.connect = function () {
-  var sp = new serialport.SerialPort(this.comName);
-
+Device.prototype.connect = function (baudrate) {
+  var sp = new serialport.SerialPort(this.comName, {
+    baudrate: baudrate || 9600
+  });
   var scope = this;
 
   sp.on('open', function () {

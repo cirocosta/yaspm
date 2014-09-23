@@ -12,6 +12,9 @@
   "bugs": {
     "url": "https://github.com/cirocosta/yaspm/issues"
   },
+  "scripts": {
+    "test": "mocha test"
+  },
   "homepage": "https://github.com/cirocosta/yaspm",
   "dependencies": {
     "lodash": "^2.4.1",
