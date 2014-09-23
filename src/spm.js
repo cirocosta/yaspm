@@ -12,16 +12,19 @@ var SerialPort = require('serialport').SerialPort;
  *                            to be called with
  *                            (err|sp|signature)
  */
-function enhanceSpm (comName, fn) {
+function enhanceSpm (comName, checkSignature, fn) {
   var sp = new SerialPort(comName)
     , open = false;
 
   sp.writable = true;
   sp.on('open', function() {
     open = true;
-    getSignature(sp, function(e, sig) {
-      fn(e, sp, sig);
-    });
+    if (checkSignature)
+      getSignature(sp, function(e, sig) {
+        fn(e, sp, sig);
+      });
+    else
+      fn(null, sp, null);
   });
 
   sp.once('error', function(e) {

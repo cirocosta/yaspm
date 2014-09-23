@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var yaspm = require('../index');
-var Machines = yaspm.Machines();
+var Machines = yaspm.Machines('grbl');
 
 Machines
   .search()

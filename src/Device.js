@@ -40,6 +40,12 @@ Device.prototype.getInfo = function () {
   });
 };
 
+Device.prototype.setSignature = function (sig) {
+  this.signature = sig;
+
+  return this;
+};
+
 /**
  * Tries to connect to the device.
  */
