@@ -1,6 +1,6 @@
 {
   "name": "yaspm",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "yet another serialport manager",
   "main": "./index.js",
   "repository": {
